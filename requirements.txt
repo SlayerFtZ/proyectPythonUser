@@ -8,6 +8,7 @@ flasgger
 pymongo
 Flask-Cors
 Pillow
+pytest
 #To install all the libraries use the following command in the terminal
 #pip install -r requirements.txt
 
