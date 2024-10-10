@@ -1,0 +1,13 @@
+openai
+flask
+selenium
+mysql-connector-python
+Flask-Mail
+Werkzeug
+flasgger
+pymongo
+Flask-Cors
+Pillow
+#To install all the libraries use the following command in the terminal
+#pip install -r requirements.txt
+
