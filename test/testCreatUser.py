@@ -74,7 +74,7 @@ def testRegisterUserInvalidLicense(client):
         "phone_number": "1234567890",
         "email": "charlie.brown@example.com",
         "password": "password321",
-        "license": "133561778585" 
+        "license": "****" 
     }
     response = client.post('/User', json=user_data)
     assert response.status_code == 400

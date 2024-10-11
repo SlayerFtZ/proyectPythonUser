@@ -1,3 +1,4 @@
+import re
 from flask import  request, jsonify
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash
@@ -36,7 +37,7 @@ def registerRoutes(app):
                     },
                     'required': ['first_name', 'last_name_father', 'last_name_mother', 'birth_date', 'phone_number', 'email', 'password']
                 }
-            }
+            },
         ],
         'responses': {
             201: {
@@ -69,42 +70,40 @@ def registerRoutes(app):
             }
         }
     })
-    def register_user():  
+    def register_user():
         connection = None
         cursor = None
         try:
             data = request.json
-            
-            # Crear un objeto de usuario desde el JSON de la solicitud
             user = User.from_dict(data)
 
-            # Comprobar campos requeridos
             required_fields = ['first_name', 'last_name_father', 'last_name_mother', 'birth_date', 'phone_number', 'email', 'password']
             for field in required_fields:
                 if not getattr(user, field):
                     return jsonify({'error': f'Missing field: {field}'}), 400
 
-            # Conectar a la base de datos
+            email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+            if not re.match(email_pattern, user.email):
+                return jsonify({'error': 'Invalid email format'}), 400
+
             connection = connectdataBase()
             if connection is None:
                 return jsonify({'error': 'Database connection error'}), 500
 
             cursor = connection.cursor()
 
-            # Comprobar si el correo electrónico ya está en uso
             cursor.execute("SELECT 1 FROM Users WHERE email = %s LIMIT 1", (user.email,))
             existing_email = cursor.fetchone()
 
             if existing_email:
                 return jsonify({'error': 'Email is already in use'}), 400
 
-            # Validación adicional si se proporciona la licencia
-            user_id = None  # Mover la declaración de user_id aquí para que esté disponible más tarde
+            user_id = None
             if user.license:
                 driver = startdriver()
                 try:
                     navigatepage(driver)
-                    filloutform(driver, user)  
+                    filloutform(driver, user)
                     defclickconsult(driver)
                     results = efextractresults(driver, user.license)
 
@@ -132,7 +131,6 @@ def registerRoutes(app):
                         cursor.execute("SELECT profession_id FROM Profession WHERE profession = %s LIMIT 1", (profession,))
                         profession_id = cursor.fetchone()[0]
 
-                        # Ahora, inserta el usuario en la base de datos
                         sql_user = """
                         INSERT INTO Users (first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password)
                         VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -152,9 +150,7 @@ def registerRoutes(app):
                         connection.commit()
                     else:
                         return jsonify({'error': 'Could not select ID'}), 400
-
                 except Exception as e:
-                    # En caso de error, eliminar el usuario registrado si existe
                     if user_id is not None:
                         cursor.execute("DELETE FROM Users WHERE user_id = %s", (user_id,))
                         connection.commit()
@@ -162,7 +158,6 @@ def registerRoutes(app):
                 finally:
                     closedriver(driver)
             else:
-                # Inserta el usuario sin la licencia si no se proporciona
                 sql_user = """
                 INSERT INTO Users (first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -224,6 +219,15 @@ def registerRoutes(app):
                     }
                 }
             },
+            400: {
+                'description': 'Invalid license format',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'error': {'type': 'string'}
+                    }
+                }
+            },
             500: {
                 'description': 'Server error',
                 'schema': {
@@ -236,17 +240,19 @@ def registerRoutes(app):
         }
     })
     def get_user_by_license(license):
+        
+        if not license.isdigit():
+            return jsonify({'error': 'License format is invalid, only numbers are allowed'}), 400
+
         connection = None
         cursor = None
         try:
-            # Conectar a la base de datos
             connection = connectdataBase()
             if connection is None:
                 return jsonify({'error': 'Database connection error'}), 500
 
             cursor = connection.cursor()
 
-            # Consultar el usuario y sus datos relacionados usando la licencia
             sql_query = """
             SELECT u.first_name, u.last_name_father, u.last_name_mother,
                 u.birth_date, u.phone_number, u.email, cl.license,
@@ -262,7 +268,6 @@ def registerRoutes(app):
             if user_data is None:
                 return jsonify({'error': 'User not found'}), 404
 
-            # Convertir los datos a un diccionario
             result = {
                 'first_name': user_data[0],
                 'last_name_father': user_data[1],
@@ -319,6 +324,15 @@ def registerRoutes(app):
                     }
                 }
             },
+            400: {
+                'description': 'Invalid email format',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'error': {'type': 'string'}
+                    }
+                }
+            },
             404: {
                 'description': 'User not found',
                 'schema': {
@@ -340,17 +354,19 @@ def registerRoutes(app):
         }
     })
     def get_user_by_email(email):
+        email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+        if not re.match(email_regex, email):
+            return jsonify({'error': 'Invalid email format'}), 400
+
         connection = None
         cursor = None
         try:
-            # Conectar a la base de datos
             connection = connectdataBase()
             if connection is None:
                 return jsonify({'error': 'Database connection error'}), 500
 
             cursor = connection.cursor()
 
-            # Consultar el usuario y sus datos relacionados usando el correo electrónico
             sql_query = """
             SELECT u.first_name, u.last_name_father, u.last_name_mother,
                 u.birth_date, u.phone_number, u.email, cl.license,
@@ -366,7 +382,6 @@ def registerRoutes(app):
             if user_data is None:
                 return jsonify({'error': 'User not found'}), 404
 
-            # Convertir los datos a un diccionario
             result = {
                 'first_name': user_data[0],
                 'last_name_father': user_data[1],
@@ -391,7 +406,6 @@ def registerRoutes(app):
                 cursor.close()
             if connection:
                 connection.close()
-                
                 
     @app.route('/User/search', methods=['GET'])
     @swag_from({
@@ -469,14 +483,12 @@ def registerRoutes(app):
         connection = None
         cursor = None
         try:
-            # Conectar a la base de datos
             connection = connectdataBase()
             if connection is None:
                 return jsonify({'error': 'Database connection error'}), 500
 
             cursor = connection.cursor()
 
-            # Consultar todos los usuarios con nombre y apellidos coincidentes
             sql_query = """
             SELECT u.first_name, u.last_name_father, u.last_name_mother,
                 u.birth_date, u.phone_number, u.email, cl.license,
@@ -488,13 +500,11 @@ def registerRoutes(app):
             """
             cursor.execute(sql_query, (first_name, last_name_father, last_name_mother))
             
-            # Procesar todos los resultados
             users_data = cursor.fetchall()
 
             if not users_data:
                 return jsonify({'error': 'No users found'}), 404
 
-            # Convertir los datos a una lista de diccionarios
             result = []
             for user_data in users_data:
                 result.append({
@@ -527,8 +537,6 @@ def registerRoutes(app):
                     connection.close()
                 except Exception as e:
                     print(f"Error closing connection: {e}")
-
-
 
 
     @app.route('/deleteProfessionalLicense/<license>', methods=['DELETE'])

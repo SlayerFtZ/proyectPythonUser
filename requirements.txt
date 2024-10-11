@@ -9,6 +9,7 @@ pymongo
 Flask-Cors
 Pillow
 pytest
+pytest-mock
 #To install all the libraries use the following command in the terminal
 #pip install -r requirements.txt
 
