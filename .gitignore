@@ -1,1 +1,2 @@
-services/
+services/openAI.py
+services/__pycache__
