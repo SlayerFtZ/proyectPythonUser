@@ -1,5 +1,5 @@
 class User:
-    def __init__(self, first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password, license=None):
+    def __init__(self, first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password, license=None, profile_picture_id=None):
         self.first_name = first_name
         self.last_name_father = last_name_father
         self.last_name_mother = last_name_mother
@@ -8,10 +8,11 @@ class User:
         self.email = email
         self.password = password
         self.license = license
+        self.profile_picture_id = profile_picture_id
 
     def __repr__(self):
-        return f"User({self.first_name}, {self.last_name_father}, {self.last_name_mother}, {self.birth_date}, {self.phone_number}, {self.email})"
-    
+        return f"User({self.first_name}, {self.last_name_father}, {self.last_name_mother}, {self.birth_date}, {self.phone_number}, {self.email}, {self.profile_picture_id})"
+
     def to_dict(self):
         """Returns a dictionary with the user's data."""
         return {
@@ -22,7 +23,8 @@ class User:
             "phone_number": self.phone_number,
             "email": self.email,
             "password": self.password,
-            "license": self.license
+            "license": self.license,
+            "profile_picture_id": self.profile_picture_id 
         }
 
     @classmethod
@@ -36,5 +38,6 @@ class User:
             phone_number=data.get('phone_number'),
             email=data.get('email'),
             password=data.get('password'),
-            license=data.get('license')
+            license=data.get('license'),
+            profile_picture_id=data.get('profile_picture_id')
         )

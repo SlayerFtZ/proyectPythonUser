@@ -6,11 +6,12 @@ from datetime import datetime, timezone, timedelta
 from flasgger import swag_from
 import secrets
 from services.webScrap import *
-from connection.database import connectdataBase
+from connection.database import *
 from services.openAI import *
 from services.emailResourse import *
 from model.user import *
 
+collection = connectdataBaseMongo()
 
 def registerRoutes(app):
     mail = Mail(app)
@@ -539,7 +540,7 @@ def registerRoutes(app):
                     print(f"Error closing connection: {e}")
 
 
-    @app.route('/deleteProfessionalLicense/<license>', methods=['DELETE'])
+    @app.route('/deleteUserProfessionalLicense/<license>', methods=['DELETE'])
     @swag_from({
         'parameters': [
             {
@@ -552,7 +553,7 @@ def registerRoutes(app):
         ],
         'responses': {
             200: {
-                'description': 'License and user successfully deleted',
+                'description': 'License and associated user successfully deleted',
                 'schema': {
                     'type': 'object',
                     'properties': {
@@ -581,30 +582,53 @@ def registerRoutes(app):
         }
     })
     def deleteProfessionalLicense(license):
+        connection = None
+        cursor = None
         try:
             connection = connectdataBase()
             cursor = connection.cursor()
 
-            cursor.execute("SELECT user_id FROM ChefLicenses WHERE license = %s", (license,))
+            # Obtener user_id y mongo_image_id de la licencia
+            cursor.execute("""
+                SELECT cl.user_id, pp.mongo_image_id 
+                FROM ChefLicenses cl
+                LEFT JOIN ProfilePictures pp ON cl.user_id = pp.user_id
+                WHERE cl.license = %s
+            """, (license,))
             result = cursor.fetchone()
 
             if result:
                 user_id = result[0]
+                mongo_image_id = result[1]
 
+                # Eliminar registros en la base de datos SQL
                 cursor.execute("DELETE FROM ChefLicenses WHERE license = %s", (license,))
+                cursor.execute("DELETE FROM ProfilePictures WHERE user_id = %s", (user_id,))
                 cursor.execute("DELETE FROM Users WHERE user_id = %s", (user_id,))
                 connection.commit()
 
-                cursor.close()
-                connection.close()
-                return jsonify({'message': 'License and user successfully deleted'}), 200
+                # Eliminar el documento correspondiente en MongoDB
+                if mongo_image_id:
+                    collection = connectdataBaseMongo()
+                    if collection is not None:
+                        print("Connected to MongoDB.")
+                        delete_result = collection.delete_many({"custom_id": mongo_image_id})
+                        print(f"Documents deleted from MongoDB: {delete_result.deleted_count}")
+
+                return jsonify({'message': 'License and associated user successfully deleted'}), 200
             else:
-                cursor.close()
-                connection.close()
                 return jsonify({'error': 'License not found'}), 404
 
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            print(f"Error: {str(e)}")
+            return jsonify({'error': 'Server error'}), 500
+
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
+
 
 
     @app.route('/deleteUser', methods=['DELETE'])
@@ -655,6 +679,8 @@ def registerRoutes(app):
         }
     })
     def deleteUser():
+        connection = None
+        cursor = None
         try:
             data = request.json
             email = data.get('email')
@@ -665,24 +691,42 @@ def registerRoutes(app):
             connection = connectdataBase()
             cursor = connection.cursor()
 
-            cursor.execute("SELECT user_id FROM Users WHERE email = %s", (email,))
+            cursor.execute("""
+                SELECT u.user_id, pp.mongo_image_id 
+                FROM Users u
+                LEFT JOIN ProfilePictures pp ON u.user_id = pp.user_id
+                WHERE u.email = %s
+            """, (email,))
             user = cursor.fetchone()
 
             if user:
+                user_id = user[0]
+                mongo_image_id = user[1]  
+
+                cursor.execute("DELETE FROM ProfilePictures WHERE user_id = %s", (user_id,))
                 cursor.execute("DELETE FROM Users WHERE email = %s", (email,))
                 connection.commit()
 
-                cursor.close()
-                connection.close()
-                return jsonify({'message': 'User successfully deleted'}), 200
+                if mongo_image_id:
+                    collection = connectdataBaseMongo()
+                    if collection is not None:
+                        print("Connected to MongoDB.")
+                        delete_result = collection.delete_many({"custom_id": mongo_image_id})
+                        print(f"Documents deleted from MongoDB: {delete_result.deleted_count}")
+
+                return jsonify({'message': 'User and associated profile pictures successfully deleted'}), 200
             else:
-                cursor.close()
-                connection.close()
                 return jsonify({'error': 'User not found'}), 404
 
         except Exception as e:
+            print(f"Error: {str(e)}")
             return jsonify({'error': 'Server error'}), 500
 
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
 
     @app.route('/resetPassword', methods=['POST'])
     @swag_from({

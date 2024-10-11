@@ -13,7 +13,13 @@ CREATE TABLE Users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
-
+CREATE TABLE ProfilePictures (
+    picture_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    mongo_image_id VARCHAR(255) NOT NULL, -- Almacena el ID de la imagen de MongoDB
+    upload_time DATETIME NOT NULL,
+    CONSTRAINT FK_ProfilePictures_Users FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
 -- Create the Profession table
 CREATE TABLE Profession (
     profession_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -51,6 +57,7 @@ CREATE UNIQUE INDEX idx_reset_token ON Tokens (reset_token);
 
 -- Queries
 SELECT * FROM Users;
+SELECT * FROM ProfilePictures;
 SELECT * FROM ChefLicenses;
 SELECT * FROM Profession;
 SELECT * FROM Tokens;
