@@ -10,6 +10,10 @@ Flask-Cors
 Pillow
 pytest
 pytest-mock
+opencv-python
+face_recognition
+numpy
+Pillow
 #To install all the libraries use the following command in the terminal
 #pip install -r requirements.txt
 
