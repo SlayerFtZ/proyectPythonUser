@@ -71,7 +71,7 @@ def registerRoutes(app):
             }
         }
     })
-    def register_user():
+    def registerUser():
         connection = None
         cursor = None
         try:
@@ -93,7 +93,7 @@ def registerRoutes(app):
 
             cursor = connection.cursor()
 
-            cursor.execute("SELECT 1 FROM Users WHERE email = %s LIMIT 1", (user.email,))
+            cursor.execute("SELECT 1 FROM User WHERE email = %s LIMIT 1", (user.email,))
             existing_email = cursor.fetchone()
 
             if existing_email:
@@ -113,7 +113,7 @@ def registerRoutes(app):
 
                         profession = detail_data.get("Profesión", "Not available")
 
-                        cursor.execute("SELECT 1 FROM ChefLicenses WHERE license = %s LIMIT 1", (detail_data.get("Cédula", "Not available"),))
+                        cursor.execute("SELECT 1 FROM ChefLicense WHERE license = %s LIMIT 1", (detail_data.get("Cédula", "Not available"),))
                         existing_cedula = cursor.fetchone()
 
                         if existing_cedula:
@@ -133,7 +133,7 @@ def registerRoutes(app):
                         profession_id = cursor.fetchone()[0]
 
                         sql_user = """
-                        INSERT INTO Users (first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password)
+                        INSERT INTO User (first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password)
                         VALUES (%s, %s, %s, %s, %s, %s, %s)
                         """
                         user_values = (user.first_name, user.last_name_father, user.last_name_mother, user.birth_date, user.phone_number, user.email, generate_password_hash(user.password))
@@ -142,7 +142,7 @@ def registerRoutes(app):
                         user_id = cursor.lastrowid
 
                         sql_chef_license = """
-                        INSERT INTO ChefLicenses (user_id, profession_id, license, gender, profession, year_of_issue, institution)
+                        INSERT INTO ChefLicense (user_id, profession_id, license, gender, profession, year_of_issue, institution)
                         VALUES (%s, %s, %s, %s, %s, %s, %s)
                         """
                         chef_license_values = (user_id, profession_id, detail_data.get("Cédula"), detail_data.get("Género"), profession, detail_data.get("Año de expedición"), detail_data.get("Institución"))
@@ -153,14 +153,14 @@ def registerRoutes(app):
                         return jsonify({'error': 'Could not select ID'}), 400
                 except Exception as e:
                     if user_id is not None:
-                        cursor.execute("DELETE FROM Users WHERE user_id = %s", (user_id,))
+                        cursor.execute("DELETE FROM User WHERE user_id = %s", (user_id,))
                         connection.commit()
                     return jsonify({'error': 'Web scraping error: ' + str(e)}), 400
                 finally:
                     closedriver(driver)
             else:
                 sql_user = """
-                INSERT INTO Users (first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password)
+                INSERT INTO User (first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """
                 user_values = (user.first_name, user.last_name_father, user.last_name_mother, user.birth_date, user.phone_number, user.email, generate_password_hash(user.password))
@@ -240,7 +240,7 @@ def registerRoutes(app):
             }
         }
     })
-    def get_user_by_license(license):
+    def getUserByLicense(license):
         
         if not license.isdigit():
             return jsonify({'error': 'License format is invalid, only numbers are allowed'}), 400
@@ -258,8 +258,8 @@ def registerRoutes(app):
             SELECT u.first_name, u.last_name_father, u.last_name_mother,
                 u.birth_date, u.phone_number, u.email, cl.license,
                 p.profession, cl.year_of_issue, cl.institution, cl.gender
-            FROM Users u
-            JOIN ChefLicenses cl ON u.user_id = cl.user_id
+            FROM User u
+            JOIN ChefLicense cl ON u.user_id = cl.user_id
             JOIN Profession p ON cl.profession_id = p.profession_id
             WHERE cl.license = %s
             """
@@ -354,7 +354,7 @@ def registerRoutes(app):
             }
         }
     })
-    def get_user_by_email(email):
+    def getUserByEmail(email):
         email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
         if not re.match(email_regex, email):
             return jsonify({'error': 'Invalid email format'}), 400
@@ -372,8 +372,8 @@ def registerRoutes(app):
             SELECT u.first_name, u.last_name_father, u.last_name_mother,
                 u.birth_date, u.phone_number, u.email, cl.license,
                 p.profession, cl.year_of_issue, cl.institution, cl.gender
-            FROM Users u
-            LEFT JOIN ChefLicenses cl ON u.user_id = cl.user_id
+            FROM User u
+            LEFT JOIN ChefLicense cl ON u.user_id = cl.user_id
             LEFT JOIN Profession p ON cl.profession_id = p.profession_id
             WHERE u.email = %s
             """
@@ -413,21 +413,21 @@ def registerRoutes(app):
         'parameters': [
             {
                 'name': 'first_name',
-                'description': 'First name of the users to be queried',
+                'description': 'First name of the User to be queried',
                 'in': 'query',
                 'required': True,
                 'type': 'string'
             },
             {
                 'name': 'last_name_father',
-                'description': 'Father\'s last name of the users to be queried',
+                'description': 'Father\'s last name of the User to be queried',
                 'in': 'query',
                 'required': True,
                 'type': 'string'
             },
             {
                 'name': 'last_name_mother',
-                'description': 'Mother\'s last name of the users to be queried',
+                'description': 'Mother\'s last name of the User to be queried',
                 'in': 'query',
                 'required': True,
                 'type': 'string'
@@ -435,7 +435,7 @@ def registerRoutes(app):
         ],
         'responses': {
             200: {
-                'description': 'Users data retrieved successfully',
+                'description': 'User data retrieved successfully',
                 'schema': {
                     'type': 'array',
                     'items': {
@@ -457,7 +457,7 @@ def registerRoutes(app):
                 }
             },
             404: {
-                'description': 'No users found',
+                'description': 'No User found',
                 'schema': {
                     'type': 'object',
                     'properties': {
@@ -476,7 +476,7 @@ def registerRoutes(app):
             }
         }
     })
-    def get_user_by_names():
+    def getUserByNames():
         first_name = request.args.get('first_name')
         last_name_father = request.args.get('last_name_father')
         last_name_mother = request.args.get('last_name_mother')
@@ -494,20 +494,20 @@ def registerRoutes(app):
             SELECT u.first_name, u.last_name_father, u.last_name_mother,
                 u.birth_date, u.phone_number, u.email, cl.license,
                 p.profession, cl.year_of_issue, cl.institution, cl.gender
-            FROM Users u
-            LEFT JOIN ChefLicenses cl ON u.user_id = cl.user_id
+            FROM User u
+            LEFT JOIN ChefLicense cl ON u.user_id = cl.user_id
             LEFT JOIN Profession p ON cl.profession_id = p.profession_id
             WHERE u.first_name = %s AND u.last_name_father = %s AND u.last_name_mother = %s
             """
             cursor.execute(sql_query, (first_name, last_name_father, last_name_mother))
             
-            users_data = cursor.fetchall()
+            User_data = cursor.fetchall()
 
-            if not users_data:
-                return jsonify({'error': 'No users found'}), 404
+            if not User_data:
+                return jsonify({'error': 'No User found'}), 404
 
             result = []
-            for user_data in users_data:
+            for user_data in User_data:
                 result.append({
                     'first_name': user_data[0],
                     'last_name_father': user_data[1],
@@ -591,8 +591,8 @@ def registerRoutes(app):
             # Obtener user_id y mongo_image_id de la licencia
             cursor.execute("""
                 SELECT cl.user_id, pp.mongo_image_id 
-                FROM ChefLicenses cl
-                LEFT JOIN ProfilePictures pp ON cl.user_id = pp.user_id
+                FROM ChefLicense cl
+                LEFT JOIN ProfilePicture pp ON cl.user_id = pp.user_id
                 WHERE cl.license = %s
             """, (license,))
             result = cursor.fetchone()
@@ -602,9 +602,9 @@ def registerRoutes(app):
                 mongo_image_id = result[1]
 
                 # Eliminar registros en la base de datos SQL
-                cursor.execute("DELETE FROM ChefLicenses WHERE license = %s", (license,))
-                cursor.execute("DELETE FROM ProfilePictures WHERE user_id = %s", (user_id,))
-                cursor.execute("DELETE FROM Users WHERE user_id = %s", (user_id,))
+                cursor.execute("DELETE FROM ChefLicense WHERE license = %s", (license,))
+                cursor.execute("DELETE FROM ProfilePicture WHERE user_id = %s", (user_id,))
+                cursor.execute("DELETE FROM User WHERE user_id = %s", (user_id,))
                 connection.commit()
 
                 # Eliminar el documento correspondiente en MongoDB
@@ -693,8 +693,8 @@ def registerRoutes(app):
 
             cursor.execute("""
                 SELECT u.user_id, pp.mongo_image_id 
-                FROM Users u
-                LEFT JOIN ProfilePictures pp ON u.user_id = pp.user_id
+                FROM User u
+                LEFT JOIN ProfilePicture pp ON u.user_id = pp.user_id
                 WHERE u.email = %s
             """, (email,))
             user = cursor.fetchone()
@@ -703,8 +703,8 @@ def registerRoutes(app):
                 user_id = user[0]
                 mongo_image_id = user[1]  
 
-                cursor.execute("DELETE FROM ProfilePictures WHERE user_id = %s", (user_id,))
-                cursor.execute("DELETE FROM Users WHERE email = %s", (email,))
+                cursor.execute("DELETE FROM ProfilePicture WHERE user_id = %s", (user_id,))
+                cursor.execute("DELETE FROM User WHERE email = %s", (email,))
                 connection.commit()
 
                 if mongo_image_id:
@@ -782,12 +782,12 @@ def registerRoutes(app):
         connection = connectdataBase()
         cursor = connection.cursor()
 
-        cursor.execute("SELECT user_id FROM Users WHERE email = %s", (email,))
+        cursor.execute("SELECT user_id FROM User WHERE email = %s", (email,))
         user = cursor.fetchone()
 
         if user:
             user_id = user[0]
-            cursor.execute("INSERT INTO Tokens (user_id, reset_token, token_expiration) VALUES (%s, %s, %s) "
+            cursor.execute("INSERT INTO Token (user_id, reset_token, token_expiration) VALUES (%s, %s, %s) "
                         "ON DUPLICATE KEY UPDATE reset_token = %s, token_expiration = %s", 
                         (user_id, token, expiration, token, expiration))
             connection.commit()
@@ -869,7 +869,7 @@ def registerRoutes(app):
         connection = connectdataBase()
         cursor = connection.cursor()
 
-        cursor.execute("SELECT user_id FROM Tokens WHERE reset_token = %s AND token_expiration > %s", 
+        cursor.execute("SELECT user_id FROM Token WHERE reset_token = %s AND token_expiration > %s", 
                         (token, datetime.now(timezone.utc)))
         user = cursor.fetchone()
 
@@ -877,8 +877,8 @@ def registerRoutes(app):
             user_id = user[0]
             hashed_password = generate_password_hash(new_password)
 
-            cursor.execute("UPDATE Users SET password = %s WHERE user_id = %s", (hashed_password, user_id))
-            cursor.execute("DELETE FROM Tokens WHERE user_id = %s", (user_id,))
+            cursor.execute("UPDATE User SET password = %s WHERE user_id = %s", (hashed_password, user_id))
+            cursor.execute("DELETE FROM Token WHERE user_id = %s", (user_id,))
             connection.commit()
             cursor.close()
             connection.close()

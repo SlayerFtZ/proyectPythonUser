@@ -11,7 +11,7 @@ def client():
     with app.test_client() as client:
         yield client
 
-def testRegisterUserSuccess(client):
+def testRegisterUseruccess(client):
     """Test successful user registration."""
     user_data = {
         "first_name": "Marco Antonio",

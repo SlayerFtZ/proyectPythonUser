@@ -2,8 +2,8 @@
 CREATE DATABASE DB_SazonIa;
 USE DB_SazonIa;
 
--- Create the Users table
-CREATE TABLE Users (
+-- Create the User table
+CREATE TABLE User (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
     last_name_father VARCHAR(50) NOT NULL,
@@ -13,12 +13,12 @@ CREATE TABLE Users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
-CREATE TABLE ProfilePictures (
+CREATE TABLE ProfilePicture (
     picture_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     mongo_image_id VARCHAR(255) NOT NULL, -- Almacena el ID de la imagen de MongoDB
     upload_time DATETIME NOT NULL,
-    CONSTRAINT FK_ProfilePictures_Users FOREIGN KEY (user_id) REFERENCES Users(user_id)
+    CONSTRAINT FK_ProfilePicture_User FOREIGN KEY (user_id) REFERENCES User(user_id)
 );
 -- Create the Profession table
 CREATE TABLE Profession (
@@ -26,9 +26,9 @@ CREATE TABLE Profession (
     profession VARCHAR(100) NOT NULL
 );
 
--- Create the ChefLicenses table with foreign keys to Users and Profession
-CREATE TABLE ChefLicenses (
-    ChefLicenses_id INT AUTO_INCREMENT PRIMARY KEY,
+-- Create the ChefLicense table with foreign keys to User and Profession
+CREATE TABLE ChefLicense (
+    ChefLicense_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     profession_id INT,
     license VARCHAR(50) NOT NULL,
@@ -36,35 +36,35 @@ CREATE TABLE ChefLicenses (
     profession VARCHAR(100),
     year_of_issue YEAR,
     institution VARCHAR(100),
-    CONSTRAINT FK_ChefLicenses_Users FOREIGN KEY (user_id) REFERENCES Users(user_id),
-    CONSTRAINT FK_ChefLicenses_Profession FOREIGN KEY (profession_id) REFERENCES Profession(profession_id)
+    CONSTRAINT FK_ChefLicense_User FOREIGN KEY (user_id) REFERENCES User(user_id),
+    CONSTRAINT FK_ChefLicense_Profession FOREIGN KEY (profession_id) REFERENCES Profession(profession_id)
 );
 
--- Create the Tokens table with a foreign key to Users
-CREATE TABLE Tokens (
+-- Create the Token table with a foreign key to User
+CREATE TABLE Token (
     token_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     reset_token VARCHAR(255),
     token_expiration DATETIME,
-    CONSTRAINT FK_Tokens_Users FOREIGN KEY (user_id) REFERENCES Users(user_id)
+    CONSTRAINT FK_Token_User FOREIGN KEY (user_id) REFERENCES User(user_id)
 );
 
--- Create an index on the profession field in ChefLicenses
-CREATE INDEX idx_profession ON ChefLicenses (profession);
+-- Create an index on the profession field in ChefLicense
+CREATE INDEX idx_profession ON ChefLicense (profession);
 
 -- Create a unique index on the reset_token field
-CREATE UNIQUE INDEX idx_reset_token ON Tokens (reset_token);
+CREATE UNIQUE INDEX idx_reset_token ON Token (reset_token);
 
 -- Queries
-SELECT * FROM Users;
-SELECT * FROM ProfilePictures;
-SELECT * FROM ChefLicenses;
+SELECT * FROM User;
+SELECT * FROM ProfilePicture;
+SELECT * FROM ChefLicense;
 SELECT * FROM Profession;
-SELECT * FROM Tokens;
+SELECT * FROM Token;
 
 -- Drop the database (optional, not recommended in development)
 DROP DATABASE DB_SazonIa;
-DROP TABLE Users;
-DROP TABLE ChefLicenses;
+DROP TABLE User;
+DROP TABLE ChefLicense;
 DROP TABLE Profession;
-DROP TABLE Tokens;
+DROP TABLE Token;

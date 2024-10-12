@@ -76,7 +76,7 @@ def profileRoutes(app):
 
         try:
             with connection.cursor() as cursor:
-                cursor.execute("SELECT user_id FROM Users WHERE user_id = %s", (user_id,))
+                cursor.execute("SELECT user_id FROM User WHERE user_id = %s", (user_id,))
                 user_exists = cursor.fetchone() 
 
                 if not user_exists:
@@ -94,7 +94,7 @@ def profileRoutes(app):
 
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "INSERT INTO ProfilePictures (user_id, mongo_image_id, upload_time) VALUES (%s, %s, %s)",
+                    "INSERT INTO ProfilePicture (user_id, mongo_image_id, upload_time) VALUES (%s, %s, %s)",
                     (user_id, unique_id, datetime.now())
                 )
                 connection.commit()
@@ -239,7 +239,7 @@ def profileRoutes(app):
             user_id = request.form.get('user_id')  
             if user_id:
                 with connection.cursor() as cursor:
-                    cursor.execute("SELECT user_id FROM Users WHERE user_id = %s", (user_id,))
+                    cursor.execute("SELECT user_id FROM User WHERE user_id = %s", (user_id,))
                     user_exists = cursor.fetchone()  
 
                     if not user_exists:
@@ -296,7 +296,7 @@ def profileRoutes(app):
                 return jsonify({'error': 'File not found'}), 404
 
             with connection.cursor() as cursor:
-                cursor.execute("DELETE FROM ProfilePictures WHERE mongo_image_id = %s", (file_id,))
+                cursor.execute("DELETE FROM ProfilePicture WHERE mongo_image_id = %s", (file_id,))
                 connection.commit()
 
             return jsonify({'message': 'Image deleted successfully'}), 200
