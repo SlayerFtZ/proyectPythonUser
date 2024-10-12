@@ -14,6 +14,7 @@ opencv-python
 face_recognition
 numpy
 Pillow
+azure-ai-vision
 #To install all the libraries use the following command in the terminal
 #pip install -r requirements.txt
 

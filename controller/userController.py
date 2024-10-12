@@ -120,7 +120,7 @@ def registerRoutes(app):
                         if existing_cedula:
                             return jsonify({'error': 'User with this ID already exists'}), 400
 
-                        if not Learnaboutthegastronomycareer(profession):
+                        if not checkTheContextOfTheProfession(profession):
                             return jsonify({'error': 'The career is not related to gastronomy'}), 400
 
                         cursor.execute("SELECT profession_id FROM Profession WHERE profession = %s LIMIT 1", (profession,))
