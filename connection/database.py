@@ -1,6 +1,7 @@
 import mysql.connector
 import pymongo
-
+import firebase_admin
+from firebase_admin import credentials, storage
 def connectdataBase():
     try:
         connection = mysql.connector.connect(
@@ -23,3 +24,19 @@ def connectdataBaseMongo():
     except pymongo.errors.ConnectionError as err:
         print(f"Error connecting to MongoDB: {err}")
         return None
+
+def connectdataBaseMongoFacialRecognition():
+    try:
+        client = pymongo.MongoClient('mongodb://localhost:27017/')
+        db = client['dbfacialrecognition']
+        useFacesCollection = db['facialRecognition']
+        return useFacesCollection
+    except pymongo.errors.ConnectionError as err:
+        print(f"Error connecting to MongoDB: {err}")
+        return None
+    
+def connectdataFireBase():
+        cred = credentials.Certificate('D:KeyFireBase.json')
+        firebase_admin.initialize_app(cred, {
+        'storageBucket': 'dblicenceine.appspot.com',  
+})
