@@ -49,11 +49,21 @@ CREATE TABLE Token (
     CONSTRAINT FK_Token_User FOREIGN KEY (user_id) REFERENCES User(user_id)
 );
 
+CREATE TABLE Follower (
+    FollowerId INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,  
+    FollowedId INT NOT NULL,  
+    FOREIGN KEY (user_id) REFERENCES User(user_id),
+    FOREIGN KEY (FollowedId) REFERENCES User(user_id),
+    UNIQUE (user_id, FollowedId)  
+);
+
 -- Create an index on the profession field in ChefLicense
 CREATE INDEX idx_profession ON ChefLicense (profession);
 
 -- Create a unique index on the reset_token field
 CREATE UNIQUE INDEX idx_reset_token ON Token (reset_token);
+
 
 -- Queries
 SELECT * FROM User;
