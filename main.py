@@ -1,8 +1,8 @@
 from flask import Flask
 from flask_mail import Mail
 from flasgger import Swagger 
-from controller.userController import registerRoutes
-from controller.profileController import profileRoutes
+from controller.userController import *
+from controller.profileController import *
 from connection.database import * 
 import signal
 import sys

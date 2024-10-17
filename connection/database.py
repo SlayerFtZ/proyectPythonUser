@@ -35,8 +35,8 @@ def connectdataBaseMongoFacialRecognition():
         print(f"Error connecting to MongoDB: {err}")
         return None
     
-def connectdataFireBase():
-        cred = credentials.Certificate('D:KeyFireBase.json')
-        firebase_admin.initialize_app(cred, {
-        'storageBucket': 'dblicenceine.appspot.com',  
+# Inicializa la aplicación de Firebase
+cred = credentials.Certificate('D:/Pruebas/KeyFireBase.json')
+firebase_admin.initialize_app(cred, {
+    'storageBucket': 'dblicenceine.appspot.com',  # Asegúrate de que este nombre sea correcto
 })

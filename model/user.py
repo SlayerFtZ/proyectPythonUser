@@ -9,6 +9,7 @@ class User:
         self.password = password
         self.license = license
         self.profile_picture_id = profile_picture_id
+        
 
     def __repr__(self):
         return f"User({self.first_name}, {self.last_name_father}, {self.last_name_mother}, {self.birth_date}, {self.phone_number}, {self.email}, {self.profile_picture_id})"

@@ -10,7 +10,7 @@ from connection.database import *
 from services.openAI import *
 from services.emailResourse import *
 from model.user import *
-from Handlers.userExceptionHandler import *
+
 
 collection = connectdataBaseMongo()
 
