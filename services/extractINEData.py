@@ -28,7 +28,7 @@ def functionAzure(download_url):
             "extracted_text": extracted_text,
             "text_count": len(extracted_text)
         }
-        return json_output if extracted_text else {"error": "No se extrajo texto de la imagen."}
+        return json_output if extracted_text else {"error": "No text was extracted from the image."}
     
     except Exception as e:
         return {"error": str(e)}

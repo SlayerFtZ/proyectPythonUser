@@ -9,12 +9,12 @@ URL = "https://cedulaprofesional.sep.gob.mx/cedula/presidencia/indexAvanzada.act
 
 def startDriver():
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Run in headless mode
-    chrome_options.add_argument("--disable-gpu")  # Necessary for Windows
-    chrome_options.add_argument("--no-sandbox")  # Necessary for Linux
-    chrome_options.add_argument("--disable-dev-shm-usage")  # Necessary for Linux
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu") 
+    chrome_options.add_argument("--no-sandbox") 
+    chrome_options.add_argument("--disable-dev-shm-usage")
 
-    driver = webdriver.Chrome(options=chrome_options)  # Pass options to the driver
+    driver = webdriver.Chrome(options=chrome_options) 
     return driver
 
 def navigatePage(driver):
@@ -23,9 +23,9 @@ def navigatePage(driver):
 def filloutForm(driver, user):
     try:
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'nombre')))
-        driver.find_element(By.ID, 'nombre').send_keys(user.first_name)  # First name
-        driver.find_element(By.ID, 'paterno').send_keys(user.last_name_father)  # Father's last name
-        driver.find_element(By.ID, 'materno').send_keys(user.last_name_mother)  # Mother's last name
+        driver.find_element(By.ID, 'nombre').send_keys(user.first_name) 
+        driver.find_element(By.ID, 'paterno').send_keys(user.last_name_father)  
+        driver.find_element(By.ID, 'materno').send_keys(user.last_name_mother) 
     except Exception as e:
         print(f"Error filling out the form: {e}")
 

@@ -12,7 +12,7 @@ def uploadToFirebase(file_path):
         with open(file_path, 'rb') as file:
             blob.upload_from_file(file, content_type='image/jpeg')
     except Exception as e:
-        raise Exception(f"Error al subir la imagen a Firebase: {str(e)}")
+        raise Exception(f"Error uploading image to Firebase: {str(e)}")
 
     return blob.generate_signed_url(timedelta(hours=1))
 
@@ -22,8 +22,8 @@ def deleteFromFirebase(file_path):
 
     try:
         blob.delete()
-        print(f"La imagen {os.path.basename(file_path)} ha sido eliminada exitosamente de Firebase.")
+        print(f"The image{os.path.basename(file_path)} has been successfully removed from Firebase.")
     except Exception as e:
-        raise Exception(f"Error al eliminar la imagen de Firebase: {str(e)}")
+        raise Exception(f"Error deleting image from Firebase: {str(e)}")
 
-    return f"La imagen {os.path.basename(file_path)} ha sido eliminada exitosamente."
+    return f"The image {os.path.basename(file_path)} has been successfully removed."

@@ -13,6 +13,7 @@ CREATE TABLE User (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
+
 CREATE TABLE ProfilePicture (
     picture_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -49,21 +50,20 @@ CREATE TABLE Token (
     CONSTRAINT FK_Token_User FOREIGN KEY (user_id) REFERENCES User(user_id)
 );
 
-CREATE TABLE Follower (
-    FollowerId INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,  
-    FollowedId INT NOT NULL,  
-    FOREIGN KEY (user_id) REFERENCES User(user_id),
-    FOREIGN KEY (FollowedId) REFERENCES User(user_id),
-    UNIQUE (user_id, FollowedId)  
-);
-
 -- Create an index on the profession field in ChefLicense
 CREATE INDEX idx_profession ON ChefLicense (profession);
 
 -- Create a unique index on the reset_token field
 CREATE UNIQUE INDEX idx_reset_token ON Token (reset_token);
 
+CREATE TABLE Follower (
+    follower_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,  
+    followe_id INT NOT NULL,  
+    FOREIGN KEY (user_id) REFERENCES User(user_id),
+    FOREIGN KEY (followe_id) REFERENCES User(user_id),
+    UNIQUE (user_id, followe_id)
+);
 
 -- Queries
 SELECT * FROM User;
@@ -71,6 +71,7 @@ SELECT * FROM ProfilePicture;
 SELECT * FROM ChefLicense;
 SELECT * FROM Profession;
 SELECT * FROM Token;
+SELECT * FROM Follower;
 
 -- Drop the database (optional, not recommended in development)
 DROP DATABASE DB_SazonIa;
