@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options
 
 URL = "https://cedulaprofesional.sep.gob.mx/cedula/presidencia/indexAvanzada.action"
 
-def startdriver():
+def startDriver():
     chrome_options = Options()
     chrome_options.add_argument("--headless")  # Run in headless mode
     chrome_options.add_argument("--disable-gpu")  # Necessary for Windows
@@ -17,10 +17,10 @@ def startdriver():
     driver = webdriver.Chrome(options=chrome_options)  # Pass options to the driver
     return driver
 
-def navigatepage(driver):
+def navigatePage(driver):
     driver.get(URL)
 
-def filloutform(driver, user):
+def filloutForm(driver, user):
     try:
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'nombre')))
         driver.find_element(By.ID, 'nombre').send_keys(user.first_name)  # First name
@@ -29,13 +29,13 @@ def filloutform(driver, user):
     except Exception as e:
         print(f"Error filling out the form: {e}")
 
-def defclickconsult(driver):
+def defClickConsult(driver):
     consultar_span = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.ID, 'dijit_form_Button_0_label'))
     )
     consultar_span.click()
 
-def efextractresults(driver, license):
+def extractResults(driver, license):
     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'tab2')))
     tab2 = driver.find_element(By.ID, 'tab2')
     rows = tab2.find_elements(By.CSS_SELECTOR, 'tr')
@@ -55,7 +55,7 @@ def efextractresults(driver, license):
                 resultados.append(resultado)
     return resultados
 
-def selectrowbyid(driver, license):
+def selectRowById(driver, license):
     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'tab2')))
     tab2 = driver.find_element(By.ID, 'tab2')
     rows = tab2.find_elements(By.CSS_SELECTOR, 'tr')
@@ -72,7 +72,7 @@ def selectrowbyid(driver, license):
                     return False
     return False
 
-def extractdatadetails(driver):
+def extractDataDetails(driver):
     try:
         WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'tab3')))
         datos = {

@@ -1,3 +1,4 @@
+import os
 import re
 from flask import  request, jsonify
 from flask_mail import Mail, Message
@@ -10,13 +11,14 @@ from connection.database import *
 from services.openAI import *
 from services.emailResourse import *
 from model.user import *
-
+from services.facialRecognitionService import *
+from services.fireBaseServices import *
+from services.extractINEData import *
 
 collection = connectdataBaseMongo()
 
 def registerRoutes(app):
     mail = Mail(app)
-
     @app.route('/User', methods=['POST'])
     @swag_from({
         'parameters': [
@@ -102,15 +104,15 @@ def registerRoutes(app):
 
             user_id = None
             if user.license:
-                driver = startdriver()
+                driver = startDriver()
                 try:
-                    navigatepage(driver)
-                    filloutform(driver, user)
-                    defclickconsult(driver)
-                    results = efextractresults(driver, user.license)
+                    navigatePage(driver)
+                    filloutForm(driver, user)
+                    defClickConsult(driver)
+                    results = extractResults(driver, user.license)
 
-                    if selectrowbyid(driver, user.license):
-                        detail_data = extractdatadetails(driver)
+                    if selectRowById(driver, user.license):
+                        detail_data = extractDataDetails(driver)
 
                         profession = detail_data.get("Profesión", "Not available")
 
@@ -178,8 +180,7 @@ def registerRoutes(app):
             if cursor:
                 cursor.close()
             if connection:
-                connection.close()
-
+                connection.close() 
 
     @app.route('/User/<string:license>', methods=['GET'])
     @swag_from({
@@ -778,7 +779,7 @@ def registerRoutes(app):
     })
     def resetPassword():
         email = request.json.get('email')
-        token, expiration = generate_token()
+        token, expiration = generateToken()
 
         connection = connectdataBase()
         cursor = connection.cursor()
