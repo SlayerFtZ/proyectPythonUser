@@ -568,9 +568,8 @@ def registerRoutes(app):
         last_name_father = request.args.get('last_name_father')
         last_name_mother = request.args.get('last_name_mother')
 
-        # Parámetros de paginación por defecto
-        page = 1  # Página por defecto
-        limit = 10  # Número de resultados por página
+        page = 1 
+        limit = 10 
         offset = (page - 1) * limit
 
         connection = None
