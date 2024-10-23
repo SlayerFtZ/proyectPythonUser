@@ -1,11 +1,12 @@
 import os
 import re
+import secrets
 from flask import  request, jsonify
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash
 from datetime import datetime, timezone, timedelta
 from flasgger import swag_from
-import secrets
 from services.webScrap import *
 from connection.database import *
 from services.openAI import *
@@ -15,10 +16,102 @@ from services.facialRecognitionService import *
 from services.fireBaseServices import *
 from services.extractINEData import *
 
-collection = connectdataBaseMongo()
 
 def registerRoutes(app):
     mail = Mail(app)
+    @app.route('/login', methods=['POST'])
+    @swag_from({
+        'parameters': [
+            {
+                'name': 'body',
+                'description': 'User login credentials',
+                'in': 'body',
+                'required': True,
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'email': {'type': 'string', 'format': 'email'},
+                        'password': {'type': 'string'}
+                    },
+                    'required': ['email', 'password']
+                }
+            }
+        ],
+        'responses': {
+            200: {
+                'description': 'Login successful',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'message': {'type': 'string'},
+                        'user_id': {'type': 'integer'}
+                    }
+                }
+            },
+            400: {
+                'description': 'Login failed - Invalid email or password',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'error': {'type': 'string'}
+                    }
+                }
+            },
+            500: {
+                'description': 'Server error',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'error': {'type': 'string'}
+                    }
+                }
+            }
+        }
+    })
+    def loginUser():
+        connection = None
+        cursor = None
+        try:
+            data = request.json
+            email = data.get('email')
+            password = data.get('password')
+
+            if not email or not password:
+                return jsonify({'error': 'Email and password are required'}), 400
+
+            email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+            if not re.match(email_pattern, email):
+                return jsonify({'error': 'Invalid email format'}), 400
+
+            connection = connectdataBase()
+            if connection is None:
+                return jsonify({'error': 'Database connection error'}), 500
+
+            cursor = connection.cursor()
+
+            cursor.execute("SELECT password, user_id FROM User WHERE email = %s LIMIT 1", (email,))
+            user = cursor.fetchone()
+
+            if user is None:
+                return jsonify({'error': 'Email not found'}), 400
+
+            stored_password = user[0]
+            user_id = user[1]
+
+            if not check_password_hash(stored_password, password):
+                return jsonify({'error': 'Incorrect password'}), 400
+
+            return jsonify({'message': 'Login successful', 'user_id': user_id}), 200
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return jsonify({'error': 'Login error'}), 500
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
+                
     @app.route('/User', methods=['POST'])
     @swag_from({
         'parameters': [
@@ -86,6 +179,7 @@ def registerRoutes(app):
                 if not getattr(user, field):
                     return jsonify({'error': f'Missing field: {field}'}), 400
 
+            # Validación de formato de email
             email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
             if not re.match(email_pattern, user.email):
                 return jsonify({'error': 'Invalid email format'}), 400
@@ -103,6 +197,9 @@ def registerRoutes(app):
                 return jsonify({'error': 'Email is already in use'}), 400
 
             user_id = None
+            # Se usa la URL de imagen por defecto en caso de no proporcionar una
+            profile_picture_url = user.profilePictureUrl
+
             if user.license:
                 driver = startDriver()
                 try:
@@ -162,6 +259,7 @@ def registerRoutes(app):
                 finally:
                     closedriver(driver)
             else:
+                # Insertar usuario sin licencia
                 sql_user = """
                 INSERT INTO User (first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -170,6 +268,14 @@ def registerRoutes(app):
                 cursor.execute(sql_user, user_values)
                 connection.commit()
                 user_id = cursor.lastrowid
+
+            # Inserta la imagen de perfil en la tabla ProfilePicture
+            sql_profile_picture = """
+            INSERT INTO ProfilePicture (user_id, image_url, upload_time)
+            VALUES (%s, %s, NOW())
+            """
+            cursor.execute(sql_profile_picture, (user_id, profile_picture_url))
+            connection.commit()
 
             return jsonify({'message': 'User registered successfully', 'user_id': user_id}), 201
 
@@ -180,7 +286,9 @@ def registerRoutes(app):
             if cursor:
                 cursor.close()
             if connection:
-                connection.close() 
+                connection.close()
+
+
 
     @app.route('/User/<string:license>', methods=['GET'])
     @swag_from({
@@ -541,7 +649,6 @@ def registerRoutes(app):
                 except Exception as e:
                     print(f"Error closing connection: {e}")
 
-
     @app.route('/deleteUserProfessionalLicense/<license>', methods=['DELETE'])
     @swag_from({
         'parameters': [
@@ -590,32 +697,22 @@ def registerRoutes(app):
             connection = connectdataBase()
             cursor = connection.cursor()
 
-            # Obtener user_id y mongo_image_id de la licencia
+            # Obtener user_id de la licencia
             cursor.execute("""
-                SELECT cl.user_id, pp.mongo_image_id 
+                SELECT cl.user_id 
                 FROM ChefLicense cl
-                LEFT JOIN ProfilePicture pp ON cl.user_id = pp.user_id
                 WHERE cl.license = %s
             """, (license,))
             result = cursor.fetchone()
 
             if result:
                 user_id = result[0]
-                mongo_image_id = result[1]
 
                 # Eliminar registros en la base de datos SQL
                 cursor.execute("DELETE FROM ChefLicense WHERE license = %s", (license,))
                 cursor.execute("DELETE FROM ProfilePicture WHERE user_id = %s", (user_id,))
                 cursor.execute("DELETE FROM User WHERE user_id = %s", (user_id,))
                 connection.commit()
-
-                # Eliminar el documento correspondiente en MongoDB
-                if mongo_image_id:
-                    collection = connectdataBaseMongo()
-                    if collection is not None:
-                        print("Connected to MongoDB.")
-                        delete_result = collection.delete_many({"custom_id": mongo_image_id})
-                        print(f"Documents deleted from MongoDB: {delete_result.deleted_count}")
 
                 return jsonify({'message': 'License and associated user successfully deleted'}), 200
             else:
@@ -630,7 +727,6 @@ def registerRoutes(app):
                 cursor.close()
             if connection:
                 connection.close()
-
 
 
     @app.route('/deleteUser', methods=['DELETE'])
@@ -694,27 +790,18 @@ def registerRoutes(app):
             cursor = connection.cursor()
 
             cursor.execute("""
-                SELECT u.user_id, pp.mongo_image_id 
+                SELECT u.user_id 
                 FROM User u
-                LEFT JOIN ProfilePicture pp ON u.user_id = pp.user_id
                 WHERE u.email = %s
             """, (email,))
             user = cursor.fetchone()
 
             if user:
                 user_id = user[0]
-                mongo_image_id = user[1]  
 
                 cursor.execute("DELETE FROM ProfilePicture WHERE user_id = %s", (user_id,))
                 cursor.execute("DELETE FROM User WHERE email = %s", (email,))
                 connection.commit()
-
-                if mongo_image_id:
-                    collection = connectdataBaseMongo()
-                    if collection is not None:
-                        print("Connected to MongoDB.")
-                        delete_result = collection.delete_many({"custom_id": mongo_image_id})
-                        print(f"Documents deleted from MongoDB: {delete_result.deleted_count}")
 
                 return jsonify({'message': 'User and associated profile pictures successfully deleted'}), 200
             else:
@@ -729,6 +816,7 @@ def registerRoutes(app):
                 cursor.close()
             if connection:
                 connection.close()
+
 
     @app.route('/resetPassword', methods=['POST'])
     @swag_from({

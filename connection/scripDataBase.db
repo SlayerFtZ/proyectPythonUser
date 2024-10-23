@@ -2,7 +2,7 @@
 CREATE DATABASE DB_SazonIa;
 USE DB_SazonIa;
 
--- Create the User table
+
 CREATE TABLE User (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
@@ -17,10 +17,12 @@ CREATE TABLE User (
 CREATE TABLE ProfilePicture (
     picture_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    mongo_image_id VARCHAR(255) NOT NULL, -- Almacena el ID de la imagen de MongoDB
+    image_url VARCHAR(255) NOT NULL, -- Almacena el ID de la imagen de MongoDB
     upload_time DATETIME NOT NULL,
     CONSTRAINT FK_ProfilePicture_User FOREIGN KEY (user_id) REFERENCES User(user_id)
 );
+
+
 -- Create the Profession table
 CREATE TABLE Profession (
     profession_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -57,13 +59,54 @@ CREATE INDEX idx_profession ON ChefLicense (profession);
 CREATE UNIQUE INDEX idx_reset_token ON Token (reset_token);
 
 CREATE TABLE Follower (
-    follower_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,  
-    followe_id INT NOT NULL,  
+    user_id INT NOT NULL,
+    followed_id INT NOT NULL,
+    PRIMARY KEY (user_id, followed_id),
     FOREIGN KEY (user_id) REFERENCES User(user_id),
-    FOREIGN KEY (followe_id) REFERENCES User(user_id),
-    UNIQUE (user_id, followe_id)
+    FOREIGN KEY (followed_id) REFERENCES User(user_id),
+    UNIQUE (user_id, followed_id)
 );
+
+CREATE TABLE OpenAIRequest
+(
+    request_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    prompt VARCHAR(500) NOT NULL,
+    recommendations VARCHAR(1000),
+    requestDate DATE NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES User(user_id)
+);
+
+
+
+
+---- Insert data
+
+INSERT INTO User (first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password)
+VALUES ('Juan2', 'Perez', 'Lopez', '1990-01-01', '555-1234', 'juan2.perez@example.com', 'securepassword'),
+('Juan1', 'Perez', 'Lopez', '1990-01-01', '555-1234', 'juan1.perez@example.com', 'securepassword'),
+('Juan3', 'Perez', 'Lopez', '1990-01-01', '555-1234', 'juan3.perez@example.com', 'securepassword'),
+('Juan4', 'Perez', 'Lopez', '1990-01-01', '555-1234', 'juan4.perez@example.com', 'securepassword');
+
+INSERT INTO ProfilePicture (user_id, mongo_image_id, upload_time)
+VALUES (1, 'someMongoImageId12345', NOW());
+
+INSERT INTO Profession (profession)
+VALUES ('Chef');
+
+INSERT INTO ChefLicense (user_id, profession_id, license, gender, profession, year_of_issue, institution)
+VALUES (1, 1, 'CHEF12345', 'Male', 'Chef', 2020, 'Culinary Institute');
+
+INSERT INTO Token (user_id, reset_token, token_expiration)
+VALUES (1, 'randomToken123', '2024-12-31 23:59:59');
+
+INSERT INTO Follower (user_id, followed_id)
+VALUES (1, 2);
+
+INSERT INTO OpenAIRequest (user_id, prompt, recommendations, requestDate)
+VALUES (1, 'Generate a recipe for lasagna', 'Use fresh ingredients', '2024-10-17');
+
+select * from OpenAIRequest;
 
 -- Queries
 SELECT * FROM User;
@@ -79,3 +122,5 @@ DROP TABLE User;
 DROP TABLE ChefLicense;
 DROP TABLE Profession;
 DROP TABLE Token;
+DROP TABLE Follower;
+DROP TABLE OpenAIRequest;

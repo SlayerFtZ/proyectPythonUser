@@ -1,5 +1,6 @@
 class User:
-    def __init__(self, first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password, license=None, profile_picture_id=None):
+    def __init__(self, first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password, license=None, profilePictureUrl=None):
+        default_profile_picture_url = "https://st.depositphotos.com/1537427/3571/v/450/depositphotos_35717211-stock-illustration-vector-user-icon.jpg"
         self.first_name = first_name
         self.last_name_father = last_name_father
         self.last_name_mother = last_name_mother
@@ -8,14 +9,14 @@ class User:
         self.email = email
         self.password = password
         self.license = license
-        self.profile_picture_id = profile_picture_id
-        
+        self.profilePictureUrl = profilePictureUrl or default_profile_picture_url  # Asigna la URL por defecto si no se proporciona
 
     def __repr__(self):
-        return f"User({self.first_name}, {self.last_name_father}, {self.last_name_mother}, {self.birth_date}, {self.phone_number}, {self.email}, {self.profile_picture_id})"
+        return (f"User({self.first_name}, {self.last_name_father}, {self.last_name_mother}, "
+                f"{self.birth_date}, {self.phone_number}, {self.email}, {self.profilePictureUrl})")
 
     def to_dict(self):
-        """Returns a dictionary with the user's data."""
+        """Devuelve un diccionario con los datos del usuario."""
         return {
             "first_name": self.first_name,
             "last_name_father": self.last_name_father,
@@ -25,12 +26,12 @@ class User:
             "email": self.email,
             "password": self.password,
             "license": self.license,
-            "profile_picture_id": self.profile_picture_id 
+            "profilePictureUrl": self.profilePictureUrl  # Reflejando la URL de la foto de perfil
         }
 
     @classmethod
     def from_dict(cls, data):
-        """Creates an instance of User from a dictionary."""
+        """Crea una instancia de User a partir de un diccionario."""
         return cls(
             first_name=data.get('first_name'),
             last_name_father=data.get('last_name_father'),
@@ -40,5 +41,5 @@ class User:
             email=data.get('email'),
             password=data.get('password'),
             license=data.get('license'),
-            profile_picture_id=data.get('profile_picture_id')
+            profilePictureUrl=data.get('profilePictureUrl')  # Adaptando al formato de la URL
         )

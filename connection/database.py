@@ -15,26 +15,7 @@ def connectdataBase():
         print(f"Error connecting to the database: {err}")
         return None
 
-def connectdataBaseMongo():
-    try:
-        client = pymongo.MongoClient("mongodb://localhost:27017/")
-        db = client["dbImageProfile"]
-        collection = db["profile"]
-        return collection
-    except pymongo.errors.ConnectionError as err:
-        print(f"Error connecting to MongoDB: {err}")
-        return None
 
-def connectdataBaseMongoFacialRecognition():
-    try:
-        client = pymongo.MongoClient('mongodb://localhost:27017/')
-        db = client['dbfacialrecognition']
-        useFacesCollection = db['facialRecognition']
-        return useFacesCollection
-    except pymongo.errors.ConnectionError as err:
-        print(f"Error connecting to MongoDB: {err}")
-        return None
-    
 def connectDataFireBase():
     cred = credentials.Certificate('D:/Pruebas/KeyFireBase.json')
     firebase_admin.initialize_app(cred, {
