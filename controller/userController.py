@@ -179,7 +179,6 @@ def registerRoutes(app):
                 if not getattr(user, field):
                     return jsonify({'error': f'Missing field: {field}'}), 400
 
-            # Validación de formato de email
             email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
             if not re.match(email_pattern, user.email):
                 return jsonify({'error': 'Invalid email format'}), 400
@@ -197,7 +196,6 @@ def registerRoutes(app):
                 return jsonify({'error': 'Email is already in use'}), 400
 
             user_id = None
-            # Se usa la URL de imagen por defecto en caso de no proporcionar una
             profile_picture_url = user.profilePictureUrl
 
             if user.license:
@@ -259,7 +257,6 @@ def registerRoutes(app):
                 finally:
                     closedriver(driver)
             else:
-                # Insertar usuario sin licencia
                 sql_user = """
                 INSERT INTO User (first_name, last_name_father, last_name_mother, birth_date, phone_number, email, password)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -269,7 +266,6 @@ def registerRoutes(app):
                 connection.commit()
                 user_id = cursor.lastrowid
 
-            # Inserta la imagen de perfil en la tabla ProfilePicture
             sql_profile_picture = """
             INSERT INTO ProfilePicture (user_id, image_url, upload_time)
             VALUES (%s, %s, NOW())
@@ -425,12 +421,7 @@ def registerRoutes(app):
                         'last_name_mother': {'type': 'string'},
                         'birth_date': {'type': 'string', 'format': 'date'},
                         'phone_number': {'type': 'string'},
-                        'email': {'type': 'string', 'format': 'email'},
-                        'license': {'type': 'string'},
-                        'profession': {'type': 'string'},
-                        'year_of_issue': {'type': 'string'},
-                        'institution': {'type': 'string'},
-                        'gender': {'type': 'string'}
+                        'email': {'type': 'string', 'format': 'email'}
                     }
                 }
             },
@@ -479,11 +470,8 @@ def registerRoutes(app):
 
             sql_query = """
             SELECT u.first_name, u.last_name_father, u.last_name_mother,
-                u.birth_date, u.phone_number, u.email, cl.license,
-                p.profession, cl.year_of_issue, cl.institution, cl.gender
+                u.birth_date, u.phone_number, u.email
             FROM User u
-            LEFT JOIN ChefLicense cl ON u.user_id = cl.user_id
-            LEFT JOIN Profession p ON cl.profession_id = p.profession_id
             WHERE u.email = %s
             """
             cursor.execute(sql_query, (email,))
@@ -498,12 +486,7 @@ def registerRoutes(app):
                 'last_name_mother': user_data[2],
                 'birth_date': user_data[3],
                 'phone_number': user_data[4],
-                'email': user_data[5],
-                'license': user_data[6],
-                'profession': user_data[7],
-                'year_of_issue': user_data[8],
-                'institution': user_data[9],
-                'gender': user_data[10]
+                'email': user_data[5]
             }
 
             return jsonify(result), 200
@@ -555,12 +538,7 @@ def registerRoutes(app):
                             'last_name_mother': {'type': 'string'},
                             'birth_date': {'type': 'string', 'format': 'date'},
                             'phone_number': {'type': 'string'},
-                            'email': {'type': 'string', 'format': 'email'},
-                            'license': {'type': 'string'},
-                            'profession': {'type': 'string'},
-                            'year_of_issue': {'type': 'string'},
-                            'institution': {'type': 'string'},
-                            'gender': {'type': 'string'}
+                            'email': {'type': 'string', 'format': 'email'}
                         }
                     }
                 }
@@ -590,6 +568,11 @@ def registerRoutes(app):
         last_name_father = request.args.get('last_name_father')
         last_name_mother = request.args.get('last_name_mother')
 
+        # Parámetros de paginación por defecto
+        page = 1  # Página por defecto
+        limit = 10  # Número de resultados por página
+        offset = (page - 1) * limit
+
         connection = None
         cursor = None
         try:
@@ -601,14 +584,12 @@ def registerRoutes(app):
 
             sql_query = """
             SELECT u.first_name, u.last_name_father, u.last_name_mother,
-                u.birth_date, u.phone_number, u.email, cl.license,
-                p.profession, cl.year_of_issue, cl.institution, cl.gender
+                u.birth_date, u.phone_number, u.email
             FROM User u
-            LEFT JOIN ChefLicense cl ON u.user_id = cl.user_id
-            LEFT JOIN Profession p ON cl.profession_id = p.profession_id
             WHERE u.first_name = %s AND u.last_name_father = %s AND u.last_name_mother = %s
+            LIMIT %s OFFSET %s
             """
-            cursor.execute(sql_query, (first_name, last_name_father, last_name_mother))
+            cursor.execute(sql_query, (first_name, last_name_father, last_name_mother, limit, offset))
             
             User_data = cursor.fetchall()
 
@@ -623,12 +604,7 @@ def registerRoutes(app):
                     'last_name_mother': user_data[2],
                     'birth_date': user_data[3],
                     'phone_number': user_data[4],
-                    'email': user_data[5],
-                    'license': user_data[6],
-                    'profession': user_data[7],
-                    'year_of_issue': user_data[8],
-                    'institution': user_data[9],
-                    'gender': user_data[10]
+                    'email': user_data[5]
                 })
 
             return jsonify(result), 200
@@ -647,6 +623,7 @@ def registerRoutes(app):
                     connection.close()
                 except Exception as e:
                     print(f"Error closing connection: {e}")
+
 
     @app.route('/deleteUserProfessionalLicense/<license>', methods=['DELETE'])
     @swag_from({
@@ -696,7 +673,6 @@ def registerRoutes(app):
             connection = connectdataBase()
             cursor = connection.cursor()
 
-            # Obtener user_id de la licencia
             cursor.execute("""
                 SELECT cl.user_id 
                 FROM ChefLicense cl
@@ -707,7 +683,6 @@ def registerRoutes(app):
             if result:
                 user_id = result[0]
 
-                # Eliminar registros en la base de datos SQL
                 cursor.execute("DELETE FROM ChefLicense WHERE license = %s", (license,))
                 cursor.execute("DELETE FROM ProfilePicture WHERE user_id = %s", (user_id,))
                 cursor.execute("DELETE FROM User WHERE user_id = %s", (user_id,))

@@ -9,7 +9,7 @@ class User:
         self.email = email
         self.password = password
         self.license = license
-        self.profilePictureUrl = profilePictureUrl or default_profile_picture_url  # Asigna la URL por defecto si no se proporciona
+        self.profilePictureUrl = profilePictureUrl or default_profile_picture_url
 
     def __repr__(self):
         return (f"User({self.first_name}, {self.last_name_father}, {self.last_name_mother}, "
@@ -26,7 +26,7 @@ class User:
             "email": self.email,
             "password": self.password,
             "license": self.license,
-            "profilePictureUrl": self.profilePictureUrl  # Reflejando la URL de la foto de perfil
+            "profilePictureUrl": self.profilePictureUrl
         }
 
     @classmethod
@@ -41,5 +41,5 @@ class User:
             email=data.get('email'),
             password=data.get('password'),
             license=data.get('license'),
-            profilePictureUrl=data.get('profilePictureUrl')  # Adaptando al formato de la URL
+            profilePictureUrl=data.get('profilePictureUrl')
         )
