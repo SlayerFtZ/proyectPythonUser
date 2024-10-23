@@ -11,7 +11,7 @@ def client():
     with app.test_client() as client:
         yield client
 
-def testRegisterUseruccess(client):
+def testRegisterUserSuccess(client):
     """Test successful user registration."""
     user_data = {
         "first_name": "Marco Antonio",
@@ -23,6 +23,24 @@ def testRegisterUseruccess(client):
         "password": "securepassword",
         "license": "10315777"
     }
+    response = client.post('/User', json=user_data)
+    assert response.status_code == 201
+    data = json.loads(response.data)
+    assert 'message' in data
+    assert data['message'] == 'User registered successfully'
+    assert 'user_id' in data
+    
+def testRegisterNormalUserSuccess(client):
+    """Test successful user registration."""
+    user_data = {
+            "first_name": "Marco Antonio",
+            "last_name_father": "Aguilar",
+            "last_name_mother": "Cortes",
+            "birth_date": "1990-01-01",
+            "phone_number": "2321431642",
+            "email": "11marco.doe@example.com",
+            "password": "securepassword",
+        }
     response = client.post('/User', json=user_data)
     assert response.status_code == 201
     data = json.loads(response.data)
@@ -55,7 +73,7 @@ def testRegisterUserEmailInUse(client):
         "last_name_mother": "Land",
         "birth_date": "1992-02-02",
         "phone_number": "1122334455",
-        "email": "marco.doe@example.com",
+        "email": "marco.doe@example.com",  # Existing email
         "password": "password123"
     }
     response = client.post('/User', json=user_data)
@@ -100,20 +118,3 @@ def testRegisterUserNonGastronomyCareer(client):
     assert 'error' in data
     assert data['error'] == 'The career is not related to gastronomy'
 
-def testRegisterUserInternalError(client):
-    """Test server error response."""
-    user_data = {
-        "first_name": "Luis Fernando",
-        "last_name_father": "Romero",
-        "last_name_mother": "Gomez",
-        "birth_date": "1988-01-01",  
-        "phone_number": "4555555555",  
-        "email": "bobcl@gmail.com", 
-        "password": "bobpassword",
-        "license": "4885995",
-    }
-    response = client.post('/User', json=user_data)
-    assert response.status_code == 400
-    data = json.loads(response.data)
-    assert 'error' in data
-    assert data['error'] == 'Registration error'

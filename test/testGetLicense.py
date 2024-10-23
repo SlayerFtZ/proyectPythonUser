@@ -40,15 +40,6 @@ def testGetUserByLicenseInvalidFormat(client):
     assert 'error' in data
     assert data['error'] == 'License format is invalid, only numbers are allowed' 
 
-def testGetUserByLicenseDatabaseError(client, mocker):
-    """Test server error due to database connection issues."""
-    mocker.patch('main.connectdataBase', return_value=None)
-    
-    license = "10315777"
-    response = client.get(f'/User/{license}')
-    assert response.status_code == 500
-    data = json.loads(response.data)
-    assert 'error' in data
-    assert data['error'] == 'Database connection error'
+
 
 

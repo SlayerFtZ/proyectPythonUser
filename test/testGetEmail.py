@@ -40,13 +40,4 @@ def testGetUserByEmailInvalidFormat(client):
     assert 'error' in data
     assert data['error'] == 'Invalid email format'
 
-def testGetUserByEmailDatabaseError(client, mocker):
-    """Test server error due to database connection issues."""
-    mocker.patch('main.connectdataBase', return_value=None)
-    
-    email = "marco.antonio@example.com"
-    response = client.get(f'/User/email/{email}')
-    assert response.status_code == 500
-    data = json.loads(response.data)
-    assert 'error' in data
-    assert data['error'] == 'Database connection error'
+

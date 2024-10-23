@@ -289,7 +289,6 @@ def registerRoutes(app):
                 connection.close()
 
 
-
     @app.route('/User/<string:license>', methods=['GET'])
     @swag_from({
         'parameters': [
