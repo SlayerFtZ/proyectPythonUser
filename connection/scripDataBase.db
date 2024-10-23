@@ -77,7 +77,13 @@ CREATE TABLE OpenAIRequest
     FOREIGN KEY (user_id) REFERENCES User(user_id)
 );
 
-
+CREATE TABLE FavoritePost (
+    user_id INT NOT NULL, 
+    post_id VARCHAR(36) NOT NULL, 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, post_id), -- Clave primaria compuesta
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+);
 
 
 ---- Insert data
