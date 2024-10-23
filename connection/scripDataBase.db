@@ -85,6 +85,20 @@ CREATE TABLE FavoritePost (
     FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
 );
 
+CREATE TABLE UserRecipe(
+    id_User_Recipe INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT, 
+    recipe_id INT,
+    FOREIGN KEY (user_id) REFERENCES User(user_id)
+);
+
+CREATE TABLE UserComment(
+    id_User_Comment INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT, 
+    comment_id INT,
+    FOREIGN KEY (user_id) REFERENCES User(user_id)
+);
+
 
 ---- Insert data
 
